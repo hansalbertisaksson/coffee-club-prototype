@@ -1,0 +1,170 @@
+{
+  "profile": "prototype",
+  "profiles": {
+    "prototype": [
+      {
+        "mode": "block",
+        "check": "secrets"
+      },
+      {
+        "mode": "block",
+        "check": "personal-data"
+      },
+      {
+        "mode": "block",
+        "check": "file-size"
+      },
+      {
+        "mode": "warn",
+        "check": "raw-colors"
+      }
+    ],
+    "internal": [
+      {
+        "mode": "block",
+        "check": "secrets"
+      },
+      {
+        "mode": "block",
+        "check": "personal-data"
+      },
+      {
+        "mode": "block",
+        "check": "file-size"
+      },
+      {
+        "mode": "block",
+        "check": "raw-colors"
+      }
+    ],
+    "client": [
+      {
+        "mode": "block",
+        "check": "secrets"
+      },
+      {
+        "mode": "block",
+        "check": "personal-data"
+      },
+      {
+        "mode": "block",
+        "check": "file-size"
+      },
+      {
+        "mode": "block",
+        "check": "raw-colors"
+      }
+    ]
+  },
+  "house_rules": "# House rules\n\nThese rules apply to every project built on this core. They are read by Claude, GitHub Copilot and any other agent that follows AGENTS.md. The project's own `AGENTS.md` adds to these and wins where the two differ.\n\n## How we build\n\n1. Start from the brief in `docs/brief.md`. If it says it is not filled in yet, run the `kickoff` skill first: ask its questions one at a time and write the answers there before building anything.\n2. Build from the design system. Use the CSS variables in `.core/design/tokens.css` for colour, type, spacing and radius. Never hard-code a colour or font. If a token is missing, say so and use the closest one.\n3. A prototype is a rough first draft for designers to take further. Keep it simple, readable and easy to change. Plain HTML, CSS and a little JavaScript are enough unless the brief says otherwise.\n4. Put everything that ships in `site/`. That folder is what gets published.\n5. Record any decision worth remembering in `docs/decisions.md`, with one line on why.\n\n## What you never do\n\n- Never edit anything inside `.core/`. It is shared and read-only. Suggest the change instead.\n- Never commit secrets, API keys, tokens or passwords. Use environment variables and say which ones are needed.\n- Never use real personal data such as names, emails, phone numbers or personal identity numbers. Use clearly fake sample data.\n- Never add tracking, analytics or third-party scripts without it being written in the brief.\n- Never turn off or work around a check. If a check fails, fix the cause or explain why it is wrong.\n\n## Checks\n\nRun `.core/hooks/checks/run.sh` to check the project. The same checks run in git pre-commit, after Claude edits a file, and in CI. CI is the one that counts.\n\n## Skills\n\nSkills live in `.core/skills/`. Use them when the task matches:\n\n- `start-prototype` for creating a brand new prototype, from nothing to a live link\n- `kickoff` for starting a new prototype and writing the brief\n- `build-prototype` for building or changing a page\n- `use-design-tokens` for anything visual\n- `ship-prototype` for publishing and sharing the live link\n",
+  "skills": [
+    {
+      "name": "build-prototype",
+      "description": "Build or change a page in a Build Kit prototype. Use when asked to make, sketch or change anything that will be shown in the browser.",
+      "steps": [
+        "Read `docs/brief.md`. If it is not filled in yet, run the `kickoff` skill first.",
+        "Work only in `site/`. `site/index.html` is the start page. Add more pages as `site/<name>.html` and link them from the start page.",
+        "Every page loads the shared design files first:",
+        "Put project styles in `site/styles.css` and follow the `use-design-tokens` skill.",
+        "Use plain HTML, CSS and small amounts of JavaScript. Add a framework only if the brief asks for one.",
+        "Use fake sample content. No real names, emails or other personal data.",
+        "Preview with `./scripts/start.sh` and open http://localhost:8000.",
+        "Run `.core/hooks/checks/run.sh` and fix anything that blocks.",
+        "Add a line to `docs/decisions.md` for any choice a designer would want to know about."
+      ],
+      "questions": []
+    },
+    {
+      "name": "kickoff",
+      "description": "Start a new prototype by asking the kickoff questions and writing the brief. Use when docs/brief.md is not filled in, or when someone says they want to start something new.",
+      "steps": [
+        "Say in one sentence that you'll ask a few quick questions first, so the first draft is about the right thing.",
+        "Ask the questions below **one at a time**. Wait for each answer. Keep your own words short and friendly, and offer an example answer if the person seems unsure.",
+        "If an answer is vague, ask one follow-up at most, then move on. If the person answers several questions at once, or pastes a whole brief, accept it and only ask about what's missing.",
+        "When all questions are answered, write `docs/brief.md` with one short section per question, in the person's own words. Remove the line that says the brief is not filled in.",
+        "Read the brief back as three bullet points and ask if it's right.",
+        "Only then start building, using the `build-prototype` skill."
+      ],
+      "questions": [
+        "Who is it for? Who will use it, and who will look at the prototype?",
+        "The moment. When does someone need this? What are they trying to get done?",
+        "What should they see or do? The two or three things the prototype must show.",
+        "The one thing it must get right. If only one thing works, what should it be?",
+        "How should it feel? Three words, or a reference you like.",
+        "Out of scope. What should it clearly not try to do yet?",
+        "Data. Does it touch any real personal or client data? If yes, we use fake sample data and note it here.",
+        "Feedback. Who gives feedback, and what kind of feedback do you want?"
+      ]
+    },
+    {
+      "name": "ship-prototype",
+      "description": "Publish a Build Kit prototype and share its live link. Use when asked to deploy, publish, ship or share the prototype.",
+      "steps": [
+        "Run `.core/hooks/checks/run.sh`. Nothing may block.",
+        "Commit with a short message that says what changed for the person looking at it.",
+        "Push to `main`. CI runs the same checks, builds `site/` together with the shared design files and publishes it to GitHub Pages.",
+        "The live link is `https://<owner>.github.io/<repo>/`. The repo README shows it too.",
+        "Share the link together with one sentence on what to look at and what kind of feedback you want."
+      ],
+      "questions": []
+    },
+    {
+      "name": "start-prototype",
+      "description": "Start a brand new prototype from nothing to a live link. Use when someone says they need a prototype, a demo, a mockup or a quick site for a client, an idea or a pitch, and there is no project folder for it yet.",
+      "steps": [
+        "**GitHub CLI not installed:** ask the person if you may run `brew install gh`, then continue.",
+        "**Not logged in:** ask the person to type `! gh auth login` here, choose GitHub.com, HTTPS and \"Login with a web browser\". It takes a minute and only happens once. Then run the script again.",
+        "**Name taken:** suggest another name.",
+        "Anything else: show the line that starts with `STOPPED` in plain words."
+      ],
+      "questions": []
+    },
+    {
+      "name": "use-design-tokens",
+      "description": "Style anything visual with the shared design tokens. Use whenever writing or changing CSS, colours, fonts, spacing or layout.",
+      "steps": [
+        "Colours: only `var(--color-*)`. Never write a hex, rgb or hsl value in project CSS or HTML.",
+        "Fonts: only `var(--font-sans)`, `var(--font-serif)` and `var(--font-mono)`.",
+        "Font sizes: `var(--size-xs)` up to `var(--size-3xl)`.",
+        "Spacing: `var(--space-1)` up to `var(--space-16)`. Do not invent in-between values.",
+        "Corners: `var(--radius-sm|md|lg|pill)`.",
+        "Reuse `.button`, `.card` and `.container` before writing new components."
+      ],
+      "questions": []
+    }
+  ],
+  "checks": [
+    {
+      "mode": "block",
+      "check": "secrets",
+      "description": "Looks for API keys, tokens and private keys.",
+      "result": "ok",
+      "message": ""
+    },
+    {
+      "mode": "block",
+      "check": "personal-data",
+      "description": "Looks for Swedish and Norwegian personal identity numbers.",
+      "result": "ok",
+      "message": ""
+    },
+    {
+      "mode": "block",
+      "check": "file-size",
+      "description": "Stops files over 5 MB from being committed. Large media belongs in a shared drive or a CDN.",
+      "result": "ok",
+      "message": ""
+    },
+    {
+      "mode": "warn",
+      "check": "raw-colors",
+      "description": "Flags hard-coded colours in site/ so everything visual comes from the design tokens.",
+      "result": "ok",
+      "message": ""
+    }
+  ],
+  "core_version": "0c1a523",
+  "project_version": "f5e2f8c",
+  "repository": "hansalbertisaksson/coffee-club-prototype",
+  "built_at": "2026-10-27 19:04 UTC"
+}
